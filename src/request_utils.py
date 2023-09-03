@@ -11,15 +11,20 @@ from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 
-def get_page_content(url: str, header: Dict) -> Union[str, Any]:
-    '''gets content from a page'''
-
+def check_link(url: str) -> str:
+    '''validates the link and if not tries to correct it'''
+    url = re.sub(r'www\.', '', url)
     validation_check = validators.url(url)
     if not validation_check:
         old_url = url
-        url = re.sub(r'www\.', '', url)
         url = f'https://{url}'
         logger.warn(f'invalid url: {old_url}, will be scraping {url} instead')
+
+    return url
+
+
+def get_page_content(url: str, header: Dict) -> Union[str, Any]:
+    '''gets content from a page'''
 
     try:
         response = requests.get(url, headers=header)
