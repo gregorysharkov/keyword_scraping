@@ -1,70 +1,56 @@
+'''main scraping script'''
 from pathlib import Path
+from threading import BoundedSemaphore
+from typing import Dict, List
 
 import pandas as pd
+import yaml
 from tqdm import tqdm
 
-import src.parsing_utils as pu
 from src.load_settings import load_sites
-from src.request_utils import convert_content_into_soup, get_page_content
+from src.settings import Settings
+from src.site import Site
 
 CONF_PATH = Path() / 'conf'
-HEADER = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0'
-}
 
-KEY_WORDS = [
-    r'Age Care',
-    r'Domestic Assistance',
-    r'Personal Care',
-    r'Nursing',
-    r'Homecare package',
-    r'Support Workers',
-    r'Career',
-    r'Support Coordination',
-    r'NDIS',
-    r'Plan management',
-]
 
-SOCIAL_LINKS = [
-    'linkedin',
-    'facebook',
-    'instagram',
-]
+def load_settings(path: Path) -> Dict:
+    '''loads project settings'''
 
-EMAIL_LINK_IDENTIFIER = 'mailto:'
-PHONE_LINK_IDENTIFIER = 'tel:'
+    with open(path, 'r', encoding='utf-8') as file:
+        settings = yaml.safe_load(file)
+        return Settings(**settings) # type: ignore
 
-def main():
-    site_links = load_sites(CONF_PATH / 'site_list.txt')[:20]
 
-    sites_content = [get_page_content(link, HEADER) for link in tqdm(site_links, 'Fetching sites')]
-    site_soups = [
-        convert_content_into_soup(site_content)
-        for site_content in sites_content
-    ]
+def parse_sites(site_links: List[str], settings: Dict, thread_limiter=None) -> Dict:
+    '''parse list of sites and return a dictionar'''
 
+    threads = []
+    for link in tqdm(site_links, 'getting site information'):
+        site = Site(link=link, settings=settings, threadLimiter=thread_limiter)
+        site.start()
+        threads.append(site)
 
     return_dict = {}
-    for link, site_soup in tqdm(zip(site_links, site_soups), 'Analyzing sites'):
+    for site in tqdm(threads, 'Completing requests'):
+        site.join()
+        return_dict.update({site.link: site.return_dict})
 
-        page_text = pu.get_main_page_text(site_soup) # type: ignore
-        site_links = pu.get_links(site_soup)
-        return_dict.update(
-            {
-                link: {
-                    'name': None,
-                    'address': None,
-                    'found_phones': pu.check_specific_links(site_links, PHONE_LINK_IDENTIFIER, True),
-                    'found_emails': pu.check_specific_links(site_links, EMAIL_LINK_IDENTIFIER, True),
-                    **pu.check_social_mdeia(site_links, SOCIAL_LINKS),
-                    **pu.check_keywords(page_text, KEY_WORDS),
-                }
-            }
-        )
+    return return_dict
 
-    return_df = pd.DataFrame(data=return_dict)
 
-    return_df.T.to_csv('scraped_data.csv', sep=';')
+def main():
+    '''go trhough each site and scrape it'''
+    site_links = load_sites(CONF_PATH / 'site_list.txt')[:200]
+    settings = load_settings(CONF_PATH / 'settings.yml')
+
+    max_num_threads = 32
+    thread_limiter = BoundedSemaphore(max_num_threads)
+    site_dict = parse_sites(site_links, settings, thread_limiter)
+
+    return_df = pd.DataFrame(data=site_dict).T
+    print(return_df.head())
+    return_df.to_csv('data/scraped_data.csv', sep=';')
 
 if __name__ == '__main__':
     main()
