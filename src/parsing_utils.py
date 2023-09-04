@@ -14,6 +14,7 @@ def get_main_page_text(element_soup = bs4.BeautifulSoup) -> Union[str, Any]:
         return None
 
     site_text = element_soup.text.strip() # type: ignore
+    site_text = re.sub(r' {1,}\n', '\n', site_text)
     site_text = re.sub(r'\n{2,}', '\n\n', site_text)
     site_text = re.sub(r'\t{1,}', ' ', site_text).strip()
     site_text = re.sub(r'\xa0{1,}', ' ', site_text).strip()
@@ -48,7 +49,12 @@ def get_links(page_soup: bs4.BeautifulSoup) -> Union[List[str], Any]:
     if not link_list:
         return None
 
-    link_list = list(set([element.get('href', f'invalid_link: {repr(element)}') for element in link_list]))
+    link_list = list(
+        set(
+            element.get('href', f'invalid_link: {repr(element)}')
+            for element in link_list
+        )
+    )
     return [link for link in link_list if len(link)]
 
 

@@ -85,7 +85,7 @@ class Site(Thread):
         found_links = pu.get_links(self.site_soup)
         if not found_links:
             return None
-        
+
         found_links = [
             self.link + link
             if link[0] == '/' else link
@@ -100,9 +100,8 @@ class Site(Thread):
 
         found_links = [link for link in found_links if link != self.link]
         return found_links
-    
+
     @property
-    @cache
     def self_links(self):
         '''returns a list of links to the same web site'''
 
@@ -184,6 +183,7 @@ class Site(Thread):
         if not self.site_soup:
             return {'site_text': None}
 
+        page_text = pu.get_main_page_text(self.site_soup) #type: ignore
         return {
-            'site_text': f'page: {self.link}\n{pu.get_main_page_text(self.site_soup)}'
+            'site_text': f'page: {self.link}\n{page_text}'
         }
