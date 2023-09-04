@@ -20,8 +20,13 @@ class Site(Thread):
     site_content: str
     return_dict: dict
 
-    def __init__(self, group=None, target=None, 
-                 threadLimiter=None, **kwargs) -> None:
+    def __init__(
+        self,
+        group=None,
+        target=None,
+        threadLimiter=None,
+        **kwargs
+    ) -> None:
         super().__init__(group=group, target=target, name=kwargs.get('link'))
 
         self.thread_limiter = threadLimiter
@@ -47,7 +52,6 @@ class Site(Thread):
         finally:
             if self.thread_limiter:
                 self.thread_limiter.release()
-            # print(f"Done with {self.name}")
 
     def to_dict(self):
         '''prepares a dictionary with all scraped information frm the web site'''
@@ -58,6 +62,7 @@ class Site(Thread):
             **self._get_emails(),
             **self._get_social(),
             **self._get_keywords(),
+            **self._get_page_text(),
         }
         return self.return_dict
 
@@ -168,7 +173,17 @@ class Site(Thread):
 
         return pu.check_social_mdeia(self.links, self.settings.social_links)
 
-    def _get_keywords(self):
+    def _get_keywords(self) -> Dict:
         '''checks precence of keywords on the page'''
 
         return pu.check_keywords(self.site_content, self.settings.key_words)
+
+    def _get_page_text(self) -> Dict:
+        '''returns cleaned text from the page'''
+
+        if not self.site_soup:
+            return {'site_text': None}
+
+        return {
+            'site_text': f'page: {self.link}\n{pu.get_main_page_text(self.site_soup)}'
+        }

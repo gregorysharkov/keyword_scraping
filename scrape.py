@@ -42,7 +42,6 @@ def parse_sites(site_links: List[str], settings: Dict, thread_limiter=None) -> D
 def main():
     '''go trhough each site and scrape it'''
     site_links = load_sites(CONF_PATH / 'site_list.txt')[:200]
-    # site_links = ['www.brighteraccess.com.au',]
     settings = load_settings(CONF_PATH / 'settings.yml')
 
     max_num_threads = 32
@@ -51,14 +50,7 @@ def main():
 
     return_df = pd.DataFrame(data=site_dict).T
     print(return_df.head())
-    return_df.to_csv('scraped_data.csv', sep=';')
+    return_df.to_csv('data/scraped_data.csv', sep=';')
 
 if __name__ == '__main__':
-    # from urllib.parse import urlparse
-    # print(urlparse('https://enabled4life.com.au'))
-    # print(urlparse('https://www.enabled4life.com.au/sign-up/'))
-    # print(urlparse('https://invoices.enabled4life.com.au/'))
     main()
-
-# https://interhealthcare.com.au//contact-us/
-# https://interhealthcare.com.au/contact-us/
