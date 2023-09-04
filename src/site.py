@@ -1,6 +1,7 @@
 '''module for Site class'''
 
 import re
+from functools import cache
 from threading import Thread
 from typing import Any, Dict, List, Union
 
@@ -17,6 +18,7 @@ class Site(Thread):
     link: str
     settings: Settings
     site_content: str
+    return_dict: dict
 
     def __init__(self, group=None, target=None, 
                  threadLimiter=None, **kwargs) -> None:
@@ -39,6 +41,7 @@ class Site(Thread):
             self.thread_limiter.acquire()
         try:
             self.fetch_site_content()
+            self.return_dict = self.to_dict()
         except Exception as err:
             print(f'Could not parse {self.name} due to the following error: {err}')
         finally:
@@ -46,7 +49,20 @@ class Site(Thread):
                 self.thread_limiter.release()
             # print(f"Done with {self.name}")
 
+    def to_dict(self):
+        '''prepares a dictionary with all scraped information frm the web site'''
+        self.return_dict = {
+            **self._get_name(),
+            **self._get_address(),
+            **self._get_phones(),
+            **self._get_emails(),
+            **self._get_social(),
+            **self._get_keywords(),
+        }
+        return self.return_dict
+
     @property
+    @cache
     def site_soup(self) -> Union[bs4.BeautifulSoup, Any]:
         '''convert site content into bs4 soup'''
         if not self.site_content:
@@ -55,12 +71,16 @@ class Site(Thread):
         return convert_content_into_soup(self.site_content)
 
     @property
+    @cache
     def links(self) -> Union[List[str], Any]:
         '''list of links found on the web site'''
         if not self.site_soup:
             return None
 
         found_links = pu.get_links(self.site_soup)
+        if not found_links:
+            return None
+        
         found_links = [
             self.link + link
             if link[0] == '/' else link
@@ -77,6 +97,7 @@ class Site(Thread):
         return found_links
     
     @property
+    @cache
     def self_links(self):
         '''returns a list of links to the same web site'''
 
@@ -87,17 +108,6 @@ class Site(Thread):
             f'{pu.check_specific_links(self.links, "/", False)=}\n'
             f'{pu.check_specific_links(self.links, self.link, False)=}\n'
         )
-
-    def to_dict(self):
-        '''prepares a dictionary with all scraped information frm the web site'''
-        return {
-            **self._get_name(),
-            **self._get_address(),
-            **self._get_phones(),
-            **self._get_emails(),
-            **self._get_social(),
-            **self._get_keywords(),
-        }
 
     def _get_name(self) -> Dict:
         '''return dictionary with company names'''

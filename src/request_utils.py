@@ -18,9 +18,9 @@ def check_link(url: str) -> str:
     url = re.sub(r'www\.', '', url)
     validation_check = validators.url(url)
     if not validation_check:
-        old_url = url
+        # old_url = url
         url = f'https://{url}'
-        logger.warn(f'invalid url: {old_url}, will be scraping {url} instead')
+        # logger.warn(f'invalid url: {old_url}, will be scraping {url} instead')
 
     return url
 

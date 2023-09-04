@@ -26,15 +26,15 @@ def parse_sites(site_links: List[str], settings: Dict, thread_limiter=None) -> D
     '''parse list of sites and return a dictionar'''
 
     threads = []
-    for link in site_links:
+    for link in tqdm(site_links, 'getting site information'):
         site = Site(link=link, settings=settings, threadLimiter=thread_limiter)
         site.start()
         threads.append(site)
 
     return_dict = {}
-    for site in tqdm(threads):
+    for site in tqdm(threads, 'Completing requests'):
         site.join()
-        return_dict.update({site.link: site.to_dict()})
+        return_dict.update({site.link: site.return_dict})
 
     return return_dict
 
