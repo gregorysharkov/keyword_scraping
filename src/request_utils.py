@@ -6,10 +6,12 @@ from typing import Any, Dict, Union
 
 import bs4
 import requests
+import urllib3
 import validators
 from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
+urllib3.disable_warnings()
 
 def check_link(url: str) -> str:
     '''validates the link and if not tries to correct it'''
@@ -27,7 +29,7 @@ def get_page_content(url: str, header: Dict) -> Union[str, Any]:
     '''gets content from a page'''
 
     try:
-        response = requests.get(url, headers=header)
+        response = requests.get(url, headers=header, verify=False)
         return response.content.decode()  # type:ignore
     except ConnectionError:
         return None

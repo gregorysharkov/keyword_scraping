@@ -1,6 +1,7 @@
 '''module for Site class'''
 
 import re
+from threading import Thread
 from typing import Any, Dict, List, Union
 
 import bs4
@@ -11,13 +12,17 @@ from src.request_utils import (check_link, convert_content_into_soup,
 from src.settings import Settings
 
 
-class Site():
+class Site(Thread):
     '''class is responsible to fetching and parsing single page content'''
     link: str
     settings: Settings
     site_content: str
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, group=None, target=None, 
+                 threadLimiter=None, **kwargs) -> None:
+        super().__init__(group=group, target=target, name=kwargs.get('link'))
+
+        self.thread_limiter = threadLimiter
         self.__dict__.update(kwargs)
 
         if self.link:
@@ -27,6 +32,19 @@ class Site():
         '''fetch page content'''
 
         self.site_content = get_page_content(self.link, self.settings.header) # type: ignore
+
+    def run(self):
+        """function that is called whenever the thread is started"""
+        if self.thread_limiter:
+            self.thread_limiter.acquire()
+        try:
+            self.fetch_site_content()
+        except Exception as err:
+            print(f'Could not parse {self.name} due to the following error: {err}')
+        finally:
+            if self.thread_limiter:
+                self.thread_limiter.release()
+            # print(f"Done with {self.name}")
 
     @property
     def site_soup(self) -> Union[bs4.BeautifulSoup, Any]:
@@ -87,7 +105,20 @@ class Site():
 
     def _get_address(self) -> Dict:
         '''return dictionary with addresses'''
-        return {'address': None}
+        soup = self.site_soup
+        if not soup:
+            return {'address': None}
+
+        def custom_tag_selector(tag):
+            tag_match = re.search(r'a|h\d|div|span', tag.name) is not None
+            text_match = re.search('^address', tag.text.lower()) is not None
+            return tag_match & text_match
+
+        address_element = soup.find(custom_tag_selector)
+        if not address_element:
+            return {'address': None}
+
+        return {'address': address_element.text}
 
     def _get_phones(self) -> Dict:
         '''get phone links from the page'''

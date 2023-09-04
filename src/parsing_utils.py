@@ -48,7 +48,8 @@ def get_links(page_soup: bs4.BeautifulSoup) -> Union[List[str], Any]:
     if not link_list:
         return None
 
-    return list(set([element.get('href', f'invalid_link: {repr(element)}') for element in link_list]))
+    link_list = list(set([element.get('href', f'invalid_link: {repr(element)}') for element in link_list]))
+    return [link for link in link_list if len(link)]
 
 
 def check_social_mdeia(link_list: List[str], social_list: List[str]) -> Dict[str, Any]:
