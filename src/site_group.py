@@ -60,9 +60,6 @@ class SiteGroup(Thread):
 
         self._combine_results()
 
-        # while not self.queue.empty():
-        #     pass
-
     def _combine_results(self) -> None:
         '''function combines all return dictionaries'''
         combined_site = self.main_page
@@ -74,10 +71,6 @@ class SiteGroup(Thread):
             combied_site = combined_site + child
 
         self.combined_dict = combied_site.return_dict  # type: ignore
-        # return {
-        #     "main_page": self.main_page.return_dict,
-        #     "child_pages": [self.queue.get() for _ in range(len(self.children))],
-        # }
 
     def _set_main_site(self) -> None:
         '''function parses the main page'''
@@ -95,7 +88,7 @@ class SiteGroup(Thread):
 
         child_links = self.main_page.self_links
         if not child_links:
-            self.children = None
+            self.children = None  # type: ignore
             return
 
         child_sites = [

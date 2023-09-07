@@ -184,7 +184,7 @@ class Site(Thread):
             )
         )
 
-        def select_first_level_links(link_list, self_link=self.link) -> List[str]:
+        def select_first_level_links(link_list, self_link=self.link) -> List[str] | None:
             '''function removes second level links fromt he link list'''
 
             clean_links = []
