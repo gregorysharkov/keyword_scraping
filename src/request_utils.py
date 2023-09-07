@@ -13,12 +13,14 @@ from requests.exceptions import ConnectionError
 logger = logging.getLogger(__name__)
 urllib3.disable_warnings()
 
+
 def check_link(url: str) -> str:
     '''validates the link and if not tries to correct it'''
     url = re.sub(r'www\.', '', url)
     validation_check = validators.url(url)
     if not validation_check:
-        url = f'https://{url}'
+        url = f'https://{url}/'
+        url = url[:-1] if url[-2:] == '//' else url
 
     return url
 
@@ -32,9 +34,8 @@ def get_page_content(url: str, header: Dict) -> Union[str, Any]:
     except ConnectionError:
         return None
     except Exception as err:
-        print(f"Unexpected {err=}, {type(err)=}")
+        # print(f"Unexpected {err=}, {type(err)=}")
         return None
-
 
 
 def convert_content_into_soup(content: str) -> Union[bs4.BeautifulSoup, Any]:

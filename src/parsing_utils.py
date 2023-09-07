@@ -8,12 +8,12 @@ from typing import Any, Dict, List, Union
 import bs4
 
 
-def get_main_page_text(element_soup = bs4.BeautifulSoup) -> Union[str, Any]:
+def get_main_page_text(element_soup=bs4.BeautifulSoup) -> Union[str, Any]:
     '''function recovers text of the element and does some cleaning'''
     if not element_soup:
         return None
 
-    site_text = element_soup.text.strip() # type: ignore
+    site_text = element_soup.text.strip()  # type: ignore
     site_text = re.sub(r' {1,}\n', '\n', site_text)
     site_text = re.sub(r'\n{2,}', '\n\n', site_text)
     site_text = re.sub(r'\t{1,}', ' ', site_text).strip()
@@ -51,7 +51,10 @@ def get_links(page_soup: bs4.BeautifulSoup) -> Union[List[str], Any]:
 
     link_list = list(
         set(
-            element.get('href', f'invalid_link: {repr(element)}')
+            element
+            .get('href', f'invalid_link: {repr(element)}')
+            .replace('%20', '')
+            .strip()
             for element in link_list
         )
     )
@@ -83,7 +86,7 @@ def check_specific_links(
 ) -> Union[List[str], Any]:
     '''
     function returns all links in the link_list that match link_type
-    
+
     Args:
         link_list: list of links to be parsed
         link_type: type of links to be searched for
@@ -95,7 +98,6 @@ def check_specific_links(
 
     if not link_list:
         return None
-
 
     found_links = list(
         set(
