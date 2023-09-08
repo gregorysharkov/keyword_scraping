@@ -8,7 +8,8 @@ import bs4
 import requests
 import urllib3
 import validators
-from requests.exceptions import ConnectionError
+
+# from requests.exceptions import ConnectionError
 
 logger = logging.getLogger(__name__)
 urllib3.disable_warnings()
@@ -34,7 +35,7 @@ def get_page_content(url: str, header: Dict) -> Union[str, Any]:
     except ConnectionError:
         return None
     except Exception as err:
-        # print(f"Unexpected {err=}, {type(err)=}")
+        print(f"Unexpected {err=}, {type(err)=}")
         return None
 
 

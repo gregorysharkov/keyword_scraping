@@ -9,7 +9,8 @@
         "--disable=trailing-whitespace",
     ],
     "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8"
+        // "editor.defaultFormatter": "ms-python.autopep8"
+        "editor.defaultFormatter": "ruff"
     },
     "python.formatting.provider": "none",
 }

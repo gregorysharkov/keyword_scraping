@@ -32,7 +32,7 @@ def check_keywords(text: str, keywords: List[str]) -> Dict[str, Union[bool, Any]
 
     return_dict = {}
     for word in keywords:
-        search_result = not re.search(word.lower(), text.lower()) is None
+        search_result = re.search(word.lower(), text.lower()) is not None
         return_dict.update({word: search_result})
 
     return return_dict
